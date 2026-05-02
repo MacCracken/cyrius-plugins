@@ -61,6 +61,19 @@ gets the LSP automatically — no per-repo wiring.
 See [`docs/development/proposals/consolidate-cyrius-lsp-claude-plugin.md`](https://github.com/MacCracken/cyrius/blob/main/docs/development/proposals/consolidate-cyrius-lsp-claude-plugin.md)
 for the original proposal and severity rationale.
 
+## Releases
+
+Tags for this plugin follow the marketplace-wide convention
+**`cyrius-lsp--v<X.Y.Z>`** — see the
+[Tag convention](../../README.md#tag-convention) and
+[release process](../../docs/release-process.md) at the marketplace
+root for the full rules. Examples: `cyrius-lsp--v0.1.0`,
+`cyrius-lsp--v0.2.0`, etc.
+
+Released versions show up at
+[github.com/MacCracken/cyrius-plugins/releases](https://github.com/MacCracken/cyrius-plugins/releases)
+filtered to `cyrius-lsp--v*` tags.
+
 ## Open: cc5 not found under Claude Code
 
 If `cyrius-lsp` logs `[cyrius-lsp] warning: cc5 not found —

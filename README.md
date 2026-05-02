@@ -61,14 +61,52 @@ cyrius-plugins/
    ...}` entry to `.claude-plugin/marketplace.json` — version MUST
    match the plugin's `plugin.json` (`claude plugin tag` enforces it).
 3. Write `plugins/<name>/README.md` covering install + capabilities +
-   open issues.
+   open issues. Include a `## Releases` section pointing back at the
+   [Tag convention](#tag-convention) so plugin-folder readers find the
+   release rules without bouncing.
 4. Validate: `claude plugin validate plugins/<name>` and
    `claude plugin validate .` — both must pass before commit.
+5. Cut the first release per the [Tag convention](#tag-convention) and
+   the [release process](docs/release-process.md): `claude plugin tag
+   plugins/<name> --push` produces `<name>--v0.1.0` and triggers
+   [`release.yml`](.github/workflows/release.yml) to publish a GitHub
+   Release.
+
+## Tag convention
+
+**Every release tag in this repo follows the form
+`<plugin-name>--v<semver>`.** Examples:
+
+- `cyrius-lsp--v0.1.0`
+- `cyrius-lsp--v0.2.0`
+- (future) `cyrius-test-runner--v0.1.0`
+
+Two dashes between name and `v` so plugin names containing a single
+dash (`cyrius-lsp`) parse unambiguously — splitting on `--v` always
+yields `(name, version)`.
+
+Why per-plugin tags (not a single repo-wide `vX.Y.Z`):
+
+- Each plugin versions **independently** — a `cyrius-lsp` patch
+  doesn't force a version bump on every other plugin in the
+  marketplace.
+- The release workflow ([`release.yml`](.github/workflows/release.yml))
+  parses the plugin name out of the tag to know which plugin to
+  publish — repo-wide tags would have no plugin to attribute to.
+- `claude plugin tag` produces this exact format and refuses to run
+  if `plugin.json` and the marketplace entry disagree on version
+  — same guarantee the CI gate enforces.
+
+A bare `vX.Y.Z` or `X.Y.Z` tag will NOT trigger the release
+workflow (the `*--v*` glob won't match) and SHOULD be deleted to
+avoid downstream confusion. See
+[`docs/release-process.md`](docs/release-process.md) for the full
+release checklist.
 
 ## Releasing
 
-See [`docs/release-process.md`](docs/release-process.md) for the full
-checklist. Short version:
+Short version (full checklist in
+[`docs/release-process.md`](docs/release-process.md)):
 
 ```sh
 # 1. Bump plugin version in BOTH plugin.json and marketplace.json
@@ -81,9 +119,9 @@ claude plugin tag plugins/<name> --push
 ```
 
 `claude plugin tag` enforces that the plugin's `plugin.json` and the
-marketplace entry agree on version, then creates `<name>--v<X.Y.Z>`
-and (with `--push`) pushes it. Per-plugin tags so each plugin
-versions independently.
+marketplace entry agree on version, then creates the
+`<name>--v<X.Y.Z>` tag (per the [convention above](#tag-convention))
+and (with `--push`) pushes it.
 
 ## CI
 

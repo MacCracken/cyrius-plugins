@@ -39,14 +39,32 @@ jobs:
           done
 
       - name: Cross-check marketplace ↔ plugin.json version agreement
-        # `claude plugin tag --dry-run` enforces that marketplace.json's
-        # entry for a plugin agrees with that plugin's plugin.json on
-        # version. Catches drift before a release tag would.
+        # For each plugins/<name>/, verify the marketplace entry's
+        # `version` field matches the plugin's `plugin.json` version.
+        # `jq` does the read; `diff` makes the mismatch loud.
+        #
+        # NOT using `claude plugin tag --dry-run` here: that command
+        # fails when the tag for the current version already exists,
+        # which is the *normal* state after a release ships — every
+        # subsequent PR would then trip a "tag already exists" error
+        # unrelated to whether manifests actually agree.
         run: |
           set -e
           for d in plugins/*/; do
-            echo "── $d ──"
-            claude plugin tag --dry-run "$d"
+            name=$(basename "$d")
+            plugin_v=$(jq -r '.version' "$d/.claude-plugin/plugin.json")
+            mkt_v=$(jq -r --arg n "$name" \
+              '.plugins[] | select(.name == $n) | .version' \
+              .claude-plugin/marketplace.json)
+            echo "── $name: plugin.json=$plugin_v marketplace=$mkt_v ──"
+            if [ "$plugin_v" != "$mkt_v" ]; then
+              echo "❌ version mismatch for $name: plugin.json=$plugin_v vs marketplace.json=$mkt_v"
+              exit 1
+            fi
+            if [ -z "$mkt_v" ] || [ "$mkt_v" = "null" ]; then
+              echo "❌ plugin $name has no entry in .claude-plugin/marketplace.json"
+              exit 1
+            fi
           done
 
       - name: JSON syntax sanity (manifests + .lsp.json)
