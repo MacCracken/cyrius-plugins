@@ -87,16 +87,22 @@ versions independently.
 
 ## CI
 
-Every push and PR runs [`./.github/workflows/validate.yml`](.github/workflows/validate.yml):
+Two workflows in [`.github/workflows/`](.github/workflows/):
 
-- Manifests parse as JSON
-- `claude plugin validate` passes on the marketplace and each plugin
-- Marketplace entry version agrees with plugin's `plugin.json`
-  version (`claude plugin tag --dry-run` is the cross-check)
+- **[`validate.yml`](.github/workflows/validate.yml)** — runs on every
+  push to `main` and every PR. Validates marketplace + plugin
+  manifests, cross-checks marketplace ↔ plugin.json version
+  agreement, parses every JSON file. Drift between manifests fails
+  CI before merge.
+- **[`release.yml`](.github/workflows/release.yml)** — runs on
+  per-plugin tag pushes (`<name>--v<X.Y.Z>`). Re-validates the
+  tagged state, double-checks tag literal vs. manifest versions,
+  creates a GitHub Release with auto-generated notes pointing at
+  the plugin's README at that tag.
 
-Drift between `marketplace.json` and a plugin's `plugin.json` fails
-CI before the merge — same guarantee `claude plugin tag` enforces
-locally.
+Together: PR-time enforcement that manifests stay in sync, plus
+release-time enforcement that the tagged commit matches the tag's
+declared version.
 
 ## Why a separate marketplace repo
 

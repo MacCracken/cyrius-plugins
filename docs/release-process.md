@@ -62,11 +62,31 @@ claude plugin tag plugins/<name> --push
 Creates the annotated tag locally and pushes it to `origin`. Drop
 `--push` to inspect the tag locally before publishing.
 
-### 5. Verify users see the update
+### 5. Release workflow runs in CI
 
-After CI completes on `main`, downstream users get the update on next
+Pushing the tag fires
+[`.github/workflows/release.yml`](../.github/workflows/release.yml):
+
+1. Parses `<plugin>--v<version>` from the tag.
+2. Re-runs `claude plugin validate` on the marketplace and plugin.
+3. Re-runs `claude plugin tag --dry-run` to confirm version
+   agreement at the tagged commit (catches force-push / history
+   rewrite shenanigans).
+4. Cross-checks tag literal against `plugin.json`'s `version` and
+   the marketplace entry's `version` via `jq` — belt-and-suspenders
+   against the dry-run.
+5. Creates a GitHub Release titled `<plugin> <version>` with a body
+   pointing at the per-plugin README at that tag and an auto-
+   generated commit/PR list since the previous tag.
+
+The Release page is the user-facing changelog entry per version.
+
+### 6. Verify users see the update
+
+After the Release lands, downstream users get the update on next
 `/plugin marketplace update` (or auto-update if Claude Code's polling
-fires first).
+fires first). No registry to publish to — the marketplace IS the
+git repo, so the new tag IS the new version.
 
 ## Versioning policy
 

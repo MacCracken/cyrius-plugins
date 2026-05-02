@@ -1,0 +1,97 @@
+name: release
+
+# Fires when a per-plugin tag of the form `<name>--v<X.Y.Z>` is pushed.
+# `claude plugin tag` creates these locally (with `--push` to publish).
+# This workflow re-validates the tagged state on neutral infra and
+# publishes a GitHub Release so users have a discoverable changelog
+# entry per plugin version.
+on:
+  push:
+    tags:
+      - "*--v*"
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # needed to create the GitHub Release
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # full history so tag annotations resolve
+
+      - name: Install Node (Claude Code CLI runtime)
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install Claude Code CLI
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Parse plugin name + version from tag
+        id: parse
+        # Tag shape: <plugin-name>--v<semver>. Two dashes between name
+        # and `v` so plugin names containing a dash (like cyrius-lsp)
+        # parse unambiguously.
+        run: |
+          set -e
+          tag="${GITHUB_REF#refs/tags/}"
+          name="${tag%%--v*}"
+          version="${tag#*--v}"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "name=$name" >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "plugin_dir=plugins/$name" >> "$GITHUB_OUTPUT"
+          echo "Parsed: name=$name version=$version dir=plugins/$name"
+
+      - name: Verify plugin directory exists for this tag
+        run: test -d "${{ steps.parse.outputs.plugin_dir }}"
+
+      - name: Validate manifest agreement at tagged commit
+        # `claude plugin tag --dry-run` is the same cross-check the CI
+        # validate workflow runs on PRs — re-running it here catches
+        # the edge case of someone tagging a commit where manifests
+        # disagree (history-rewrite, force-push, mistaken --force on
+        # local tag, etc.).
+        run: |
+          set -e
+          claude plugin validate .
+          claude plugin validate "${{ steps.parse.outputs.plugin_dir }}"
+          claude plugin tag --dry-run "${{ steps.parse.outputs.plugin_dir }}"
+
+      - name: Confirm version in manifests matches tag
+        # Belt-and-suspenders against the dry-run: if `plugin.json`'s
+        # version field doesn't match the tag literal, fail loudly.
+        run: |
+          set -e
+          jq -e \
+            --arg expected "${{ steps.parse.outputs.version }}" \
+            '.version == $expected' \
+            "${{ steps.parse.outputs.plugin_dir }}/.claude-plugin/plugin.json"
+          jq -e \
+            --arg name "${{ steps.parse.outputs.name }}" \
+            --arg expected "${{ steps.parse.outputs.version }}" \
+            '.plugins[] | select(.name == $name) | .version == $expected' \
+            .claude-plugin/marketplace.json
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.parse.outputs.tag }}
+          name: ${{ steps.parse.outputs.name }} ${{ steps.parse.outputs.version }}
+          body: |
+            **Plugin:** `${{ steps.parse.outputs.name }}`
+            **Version:** `${{ steps.parse.outputs.version }}`
+
+            Install / update:
+            ```
+            /plugin marketplace add MacCracken/cyrius-plugins
+            /plugin install ${{ steps.parse.outputs.name }}@cyrius-plugins
+            # or, if already installed:
+            /plugin marketplace update
+            ```
+
+            See [`plugins/${{ steps.parse.outputs.name }}/README.md`](https://github.com/MacCracken/cyrius-plugins/blob/${{ steps.parse.outputs.tag }}/plugins/${{ steps.parse.outputs.name }}/README.md)
+            for capabilities and open issues at this version.
+          generate_release_notes: true   # appends auto commit/PR list under the body
+          fail_on_unmatched_files: false
