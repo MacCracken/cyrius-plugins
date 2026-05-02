@@ -1,0 +1,11 @@
+{
+  "name": "cyrius-lsp",
+  "description": "Cyrius language server wiring for Claude Code. Auto-attaches cyrius-lsp to all .cyr-family files (.cyr, .tcyr, .bcyr, .fcyr, .scyr, .smcyr) so any Cyrius project gets diagnostics without per-repo config.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Robert MacCracken",
+    "email": "robert.maccracken@gmail.com"
+  },
+  "homepage": "https://github.com/MacCracken/cyrius",
+  "license": "GPL-3.0-only"
+}
