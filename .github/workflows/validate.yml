@@ -1,0 +1,62 @@
+name: validate
+
+# Run on every push to main and on every PR. Same gate that
+# `claude plugin tag` enforces locally — manifests parse, validate,
+# and the marketplace entry agrees with each plugin's plugin.json on
+# version.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Node (Claude Code CLI runtime)
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install Claude Code CLI
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Validate marketplace manifest
+        run: claude plugin validate .
+
+      - name: Validate every plugin manifest
+        # Walks `plugins/*/` and validates each. Fails if any plugin's
+        # plugin.json is missing or malformed. Adding a new plugin
+        # auto-extends coverage — no workflow edit needed.
+        run: |
+          set -e
+          for d in plugins/*/; do
+            echo "── $d ──"
+            claude plugin validate "$d"
+          done
+
+      - name: Cross-check marketplace ↔ plugin.json version agreement
+        # `claude plugin tag --dry-run` enforces that marketplace.json's
+        # entry for a plugin agrees with that plugin's plugin.json on
+        # version. Catches drift before a release tag would.
+        run: |
+          set -e
+          for d in plugins/*/; do
+            echo "── $d ──"
+            claude plugin tag --dry-run "$d"
+          done
+
+      - name: JSON syntax sanity (manifests + .lsp.json)
+        # `claude plugin validate` already covers manifest semantics;
+        # this is just a belt-and-suspenders parse check covering the
+        # plugin-internal artifacts (.lsp.json, etc.) that the validator
+        # treats as opaque.
+        run: |
+          set -e
+          for f in $(find . -type f -name "*.json" -not -path "./node_modules/*"); do
+            echo "parsing $f"
+            python3 -c "import json,sys; json.load(open('$f'))"
+          done
