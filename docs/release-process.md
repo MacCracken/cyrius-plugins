@@ -69,15 +69,22 @@ Pushing the tag fires
 
 1. Parses `<plugin>--v<version>` from the tag.
 2. Re-runs `claude plugin validate` on the marketplace and plugin.
-3. Re-runs `claude plugin tag --dry-run` to confirm version
-   agreement at the tagged commit (catches force-push / history
-   rewrite shenanigans).
-4. Cross-checks tag literal against `plugin.json`'s `version` and
-   the marketplace entry's `version` via `jq` — belt-and-suspenders
-   against the dry-run.
-5. Creates a GitHub Release titled `<plugin> <version>` with a body
+3. Cross-checks the tag literal against `plugin.json`'s `version` and
+   the marketplace entry's `version` via `jq`. Mismatch fails the
+   workflow loudly. Catches force-push / history-rewrite cases where
+   the tag points at a commit whose manifests don't actually reflect
+   the version being released.
+4. Creates a GitHub Release titled `<plugin> <version>` with a body
    pointing at the per-plugin README at that tag and an auto-
    generated commit/PR list since the previous tag.
+
+Why `jq` not `claude plugin tag --dry-run`: at release-workflow run
+time the tag exists by definition (the workflow fired *because* it
+was pushed), and `--dry-run` treats tag existence as an error. The
+`jq` cross-check is what step 3 of the local pre-tag flow above also
+relies on — but at *that* point the tag doesn't exist yet, so
+`--dry-run` works and we use it for the additional validation it
+gives.
 
 The Release page is the user-facing changelog entry per version.
 
@@ -113,13 +120,16 @@ runs on every push and PR:
 
 1. Each `plugins/<name>/.claude-plugin/plugin.json` validates.
 2. The top-level `.claude-plugin/marketplace.json` validates.
-3. Every plugin's `claude plugin tag --dry-run` succeeds — meaning
-   the marketplace entry and plugin.json agree on version.
+3. For every plugin, `jq` reads the `version` from `plugin.json`
+   and from the corresponding marketplace entry — mismatch (or
+   missing entry) fails the run. Same agreement guarantee that
+   `claude plugin tag` enforces locally, but tag-state-independent
+   so it works on every PR after a release has shipped (when the
+   `<name>--v<X.Y.Z>` tag already exists).
 4. All `*.json` files parse as JSON.
 
 A drift between marketplace.json and a plugin's plugin.json fails CI
-before merge — the same guarantee `claude plugin tag` enforces
-locally.
+before merge.
 
 ## Adding a new plugin to the marketplace
 

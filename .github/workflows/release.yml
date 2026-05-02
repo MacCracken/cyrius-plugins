@@ -47,21 +47,27 @@ jobs:
       - name: Verify plugin directory exists for this tag
         run: test -d "${{ steps.parse.outputs.plugin_dir }}"
 
-      - name: Validate manifest agreement at tagged commit
-        # `claude plugin tag --dry-run` is the same cross-check the CI
-        # validate workflow runs on PRs — re-running it here catches
-        # the edge case of someone tagging a commit where manifests
-        # disagree (history-rewrite, force-push, mistaken --force on
-        # local tag, etc.).
+      - name: Validate manifests at tagged commit
+        # Re-runs the manifest validators on the tagged commit so a
+        # release of a malformed plugin / marketplace fails loudly
+        # instead of silently shipping. The version-agreement check
+        # below covers the cross-manifest invariant.
+        #
+        # NOT using `claude plugin tag --dry-run` here: the tag we're
+        # releasing already exists by definition (the workflow fired
+        # because it was pushed), and `--dry-run` treats tag existence
+        # as an error. Same reason validate.yml uses jq instead.
         run: |
           set -e
           claude plugin validate .
           claude plugin validate "${{ steps.parse.outputs.plugin_dir }}"
-          claude plugin tag --dry-run "${{ steps.parse.outputs.plugin_dir }}"
 
-      - name: Confirm version in manifests matches tag
-        # Belt-and-suspenders against the dry-run: if `plugin.json`'s
-        # version field doesn't match the tag literal, fail loudly.
+      - name: Confirm tag literal matches plugin.json + marketplace entry
+        # If `plugin.json`'s version field doesn't match the tag's
+        # version, OR the marketplace entry for this plugin disagrees
+        # with either, fail loudly. Catches the edge case of tagging
+        # a commit whose manifests don't actually reflect the version
+        # being released (history rewrite, force-push, etc.).
         run: |
           set -e
           jq -e \
