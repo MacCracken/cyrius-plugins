@@ -1,7 +1,7 @@
 {
   "cyrius": {
-    "command": "cyrius-lsp",
-    "args": [],
+    "command": "/bin/sh",
+    "args": ["${CLAUDE_PLUGIN_ROOT}/scripts/launch-cyrius-lsp.sh"],
     "extensionToLanguage": {
       ".cyr": "cyrius",
       ".tcyr": "cyrius",

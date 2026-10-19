@@ -1,7 +1,7 @@
 {
   "name": "cyrius-lsp",
-  "description": "Cyrius language server wiring for Claude Code. Auto-attaches cyrius-lsp to all .cyr-family files (.cyr, .tcyr, .bcyr, .fcyr, .scyr, .smcyr) so any Cyrius project gets diagnostics without per-repo config.",
-  "version": "0.1.0",
+  "description": "Cyrius language server wiring for Claude Code. Auto-attaches cyrius-lsp to every .cyr-family file (.cyr, .tcyr, .bcyr, .fcyr, .scyr, .smcyr) \u2014 diagnostics from the cycc compiler through the cyrius CLI, plus hover, go-to-definition, references, document symbols and semantic tokens \u2014 and finds the server even when ~/.cyrius/bin is not on Claude Code's PATH.",
+  "version": "0.2.0",
   "author": {
     "name": "Robert MacCracken",
     "email": "robert.maccracken@gmail.com"

@@ -1,7 +1,7 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "cyrius-plugins",
-  "description": "Claude Code plugins for the Cyrius language toolchain — currently the cyrius-lsp language-server wiring; future Cyrius-related Claude Code extensions land here. Sibling repo to MacCracken/cyrius (the language).",
+  "description": "Claude Code plugins for the Cyrius language toolchain \u2014 currently the cyrius-lsp language-server wiring; future Cyrius-related Claude Code extensions land here. Sibling repo to MacCracken/cyrius (the language).",
   "owner": {
     "name": "Robert MacCracken",
     "email": "robert.maccracken@gmail.com"
@@ -9,8 +9,8 @@
   "plugins": [
     {
       "name": "cyrius-lsp",
-      "description": "Cyrius language server (cyrius-lsp) wired to all .cyr-family extensions (.cyr / .tcyr / .bcyr / .fcyr / .scyr / .smcyr). Diagnostics from cc5; future capabilities (hover, goToDefinition, semantic tokens) land in cyrius-lsp itself.",
-      "version": "0.1.0",
+      "description": "Cyrius language server (cyrius-lsp) wired to every .cyr-family extension (.cyr / .tcyr / .bcyr / .fcyr / .scyr / .smcyr): diagnostics from cycc through the cyrius CLI, hover, go-to-definition, references, document symbols and semantic tokens; a launcher finds the server when ~/.cyrius/bin is not on PATH.",
+      "version": "0.2.0",
       "author": {
         "name": "Robert MacCracken",
         "email": "robert.maccracken@gmail.com"

@@ -19,11 +19,22 @@ Add the marketplace once at user scope, then install plugins by name:
 
 Updates flow automatically: `/plugin marketplace update`.
 
+> **If `/plugin marketplace add` reports "marketplace not found"** —
+> your Claude Code version may not resolve the `owner/repo` shorthand
+> against GitHub. Pass the full clone URL instead:
+>
+> ```sh
+> /plugin marketplace add https://github.com/MacCracken/cyrius-plugins.git
+> ```
+>
+> Newer Claude Code versions accept the shorthand (same convention as
+> `gh repo clone`); older ones need the explicit URL.
+
 ## Plugins
 
 | Plugin | Status | Description |
 |--------|--------|-------------|
-| [`cyrius-lsp`](plugins/cyrius-lsp) | 0.1.0 | Wires `cyrius-lsp` to all `.cyr`-family files (`.cyr` / `.tcyr` / `.bcyr` / `.fcyr` / `.scyr` / `.smcyr`) — diagnostics from `cc5`. |
+| [`cyrius-lsp`](plugins/cyrius-lsp) | 0.2.0 | Wires `cyrius-lsp` to all `.cyr`-family files (`.cyr` / `.tcyr` / `.bcyr` / `.fcyr` / `.scyr` / `.smcyr`) — diagnostics from `cycc`, hover, go-to-definition, references, symbols, semantic tokens; finds the server without `~/.cyrius/bin` on `PATH`. |
 
 Future slots (slash commands for `cyrius test` / `cyrius bench`,
 agents for downstream-consumer porting, etc.) land as additional
@@ -41,7 +52,9 @@ cyrius-plugins/
 │   └── cyrius-lsp/
 │       ├── .claude-plugin/
 │       │   └── plugin.json       # plugin manifest (name, version, author)
-│       ├── .lsp.json             # LSP server config (extensions → server)
+│       ├── .lsp.json             # LSP server config (extensions → the launcher)
+│       ├── scripts/
+│       │   └── launch-cyrius-lsp.sh  # finds cyrius-lsp without ~/.cyrius/bin on PATH
 │       └── README.md             # per-plugin install + capabilities
 ├── .github/
 │   └── workflows/
