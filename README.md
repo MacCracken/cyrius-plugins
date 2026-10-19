@@ -36,9 +36,20 @@ Updates flow automatically: `/plugin marketplace update`.
 |--------|--------|-------------|
 | [`cyrius-lsp`](plugins/cyrius-lsp) | 0.2.0 | Wires `cyrius-lsp` to all `.cyr`-family files (`.cyr` / `.tcyr` / `.bcyr` / `.fcyr` / `.scyr` / `.smcyr`) — diagnostics from `cycc`, hover, go-to-definition, references, symbols, semantic tokens; finds the server without `~/.cyrius/bin` on `PATH`. |
 
-Future slots (slash commands for `cyrius test` / `cyrius bench`,
-agents for downstream-consumer porting, etc.) land as additional
-entries here, not as bloat in the language repo.
+Future slots land as additional entries here, not as bloat in the language repo.
+
+### Planned (the user, 2026-10-19 — "at some point")
+
+- **A skill for language development** — an agent skill for working ON Cyrius itself (the compiler, its
+  stdlib and toolchain): the repo's process (one bite at a time, self-host and seed-derive after every compiler
+  change, the release gate, cross-OS verification on real hardware), where things live, and how decisions and
+  issues are recorded.
+- **A skill for writing Cyrius** — a skill for writing programs IN the language: the language reference
+  (`docs/guides/cyrius-guide.md`), idioms, the stdlib, the common gotchas (vidya's field notes), and
+  `cyrius build` / `test` / `fmt` / `lint`.
+- Slash commands for `cyrius test` / `cyrius bench`.
+
+Each lands as its own plugin under `plugins/` with its own `<name>--v<X.Y.Z>` tags.
 
 ## Layout
 
